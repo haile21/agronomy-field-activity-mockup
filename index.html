@@ -305,13 +305,25 @@ const phaseSections = phase => PHASE_SECTIONS[phase] || PHASE_SECTIONS['Ad hoc']
 const SEVERITIES = [{k:'None',cls:''},{k:'Low',cls:''},{k:'Moderate',cls:'sev-amber'},{k:'High',cls:'sev-clay'},{k:'Critical',cls:'sev-clay'}];
 const LEAF_COLORS = ['Healthy green','Pale / yellowing','Purple tinge','Necrotic spots'];
 const DEFICIENCIES = ['None suspected','Nitrogen','Phosphorus','Potassium','Other'];
+const ROOT_OPTIONS = ['Not inspected','Healthy / well-developed','Stunted','Rotting or damaged'];
+const GROWTH_OPTIONS = ['On track for stage','Behind expected stage','Ahead of expected stage'];
 const MGMT_TOPICS = ['Crop rotation plan','Cultivation technique','Harvest timing','Irrigation scheduling','Other'];
 const INPUT_TYPES = [
-  {k:'fertilizer', label:'🌱 Fertilizer / soil amendment', ph:'e.g. Urea top-dress, 50kg/ha'},
-  {k:'seed', label:'🌾 Seed / variety', ph:'e.g. Switch to BH661 next season'},
-  {k:'herbicide', label:'🧪 Herbicide / pesticide', ph:'e.g. Pre-emergent herbicide, spot-spray'},
-  {k:'water', label:'💧 Irrigation / water', ph:'e.g. Increase to 2x/week during flowering'},
+  {k:'fertilizer', label:'🌱 Fertilizer / soil amendment', productPh:'e.g. Urea / DAP', ratePh:'e.g. 50kg/ha'},
+  {k:'seed', label:'🌾 Seed / variety', productPh:'e.g. BH661', ratePh:'e.g. 25kg/ha'},
+  {k:'herbicide', label:'🧪 Herbicide / pesticide', productPh:'e.g. Pre-emergent herbicide', ratePh:'e.g. spot-spray, 2L/ha'},
+  {k:'water', label:'💧 Irrigation / water', productPh:'e.g. Supplementary irrigation', ratePh:'e.g. 2x/week during flowering'},
 ];
+/* Issue types found during scouting, and how much detail gets captured per severity level (the manager's
+   "different scouting levels should have different possible data points" ask): None -> nothing further,
+   Low -> just flag what kind of issue, Moderate/High/Critical -> full identification + extent per issue. */
+const ISSUE_TYPES = [
+  {k:'disease', label:'🦠 Disease'},
+  {k:'pest', label:'🐛 Insect pest'},
+  {k:'weed', label:'🌿 Weed'},
+];
+const EXTENT_OPTIONS = ['Isolated plants','Patchy','Widespread'];
+const scoutingTier = severity => severity === 'None' ? 'none' : severity === 'Low' ? 'basic' : 'detailed';
 
 let FARMERS = [
   {id:'f1', name:'Tsehay Bekele', phone:'0911 234 567', location:'Sodo Zuria, Wolaita', crops:'Teff & Maize', lastVisitOffset:-6, nextVisitOffset:1, lastPhase:'Pre-planting', nextPhase:'Post-planting'},
@@ -327,32 +339,34 @@ FARMERS.forEach(f => {
 
 let VISITS = [
   {id:'VL-3001', type:'individual', farmerId:'f1', farmerName:'Tsehay Bekele', location:'Sodo Zuria, Wolaita', date: addDays(today,-6), phase:'Pre-planting',
-    scouting:'Field clear of weed pressure, no pest signs. Soil looked workable after recent rain.', severity:'None',
-    plantHealth:{leaf:'Healthy green', deficiency:'None suspected', note:'No crop emerged yet — pre-planting visit.'},
+    scouting:'Field clear of weed pressure, no pest signs. Soil looked workable after recent rain.', severity:'None', issueTypes:[], issueDetails:{}, photoTaken:false,
+    plantHealth:null,
     soilTest:{ph:'6.2', moisture:'Fair', n:'Medium', p:'Medium', k:'High', note:'Suitable for BH661 with standard basal fertiliser.'},
-    inputs:[{type:'fertilizer', note:'DAP at planting, 100kg/ha'}, {type:'seed', note:'BH661, certified seed only'}],
+    inputs:[{type:'fertilizer', product:'DAP', rate:'100kg/ha at planting', reason:''}, {type:'seed', product:'BH661 certified seed', rate:'', reason:'Certified seed only'}],
     mgmt:['Crop rotation plan'], mgmtNote:'Agreed to rotate this plot from maize to teff next season to break pest cycle.',
     conservation:'Recommended contour ridges on the lower slope to reduce runoff.',
     nextVisitDays:7, nextPhase:'Post-planting'},
   {id:'VL-3002', type:'individual', farmerId:'f3', farmerName:'Amina Yusuf', location:'Halaba, SNNPR', date: addDays(today,-2), phase:'Initial registration',
-    scouting:'First visit — field walked, boundary and plot size confirmed.', severity:'None',
-    plantHealth:{leaf:'Healthy green', deficiency:'None suspected', note:'No crop planted yet.'},
+    scouting:'First visit — field walked, boundary and plot size confirmed.', severity:'None', issueTypes:[], issueDetails:{}, photoTaken:false,
+    plantHealth:null,
     soilTest:null,
     inputs:[], mgmt:[], mgmtNote:'', conservation:'',
     nextVisitDays:14, nextPhase:'Pre-planting'},
   {id:'VL-3003', type:'group', farmerId:null, farmerName:'Extension session — 12 attendees', location:'Sodo Zuria kebele centre', date: addDays(today,-9), phase:'Mid-season / pest follow-up',
     scouting:'Trained attendees on identifying early fall armyworm damage on maize whorls.', severity:'Moderate',
-    plantHealth:{leaf:'Pale / yellowing', deficiency:'Nitrogen', note:'Several attendees brought in leaf samples showing early nitrogen deficiency.'},
+    issueTypes:['pest'], issueDetails:{pest:{name:'Fall armyworm', extent:'Widespread'}}, photoTaken:true,
+    plantHealth:{leaf:'Pale / yellowing', root:'Not inspected', growth:'Behind expected stage', deficiency:'Nitrogen', note:'Several attendees brought in leaf samples showing early nitrogen deficiency.'},
     soilTest:null,
-    inputs:[{type:'fertilizer', note:'Top-dress urea recommended where yellowing was shown'}],
+    inputs:[{type:'fertilizer', product:'Urea', rate:'Top-dress, 50kg/ha where yellowing shown', reason:'Address nitrogen deficiency spotted during scouting'}],
     mgmt:['Cultivation technique'], mgmtNote:'Demonstrated scouting technique — checking whorls for frass before spraying.',
     conservation:'', nextVisitDays:21, nextPhase:'Pre-harvest'},
   {id:'VL-3004', type:'individual', farmerId:'f5', farmerName:'Zewditu Kassa', location:'Boloso Sore, Wolaita', date: addDays(today,-35), phase:'Post-planting',
-    scouting:'Even germination on maize. Enset stand healthy.', severity:'Low',
-    plantHealth:{leaf:'Healthy green', deficiency:'None suspected', note:'Good early growth, but soil looked dry at depth from the pre-planting test.'},
+    scouting:'Even germination on maize. Some light weed pressure at field margins.', severity:'Low',
+    issueTypes:['weed'], issueDetails:{}, photoTaken:false,
+    plantHealth:{leaf:'Healthy green', root:'Healthy / well-developed', growth:'On track for stage', deficiency:'None suspected', note:'Good early growth, but soil looked dry at depth from the pre-planting test.'},
     soilTest:null,
-    inputs:[{type:'water', note:'Advised supplementary irrigation if no rain within 5 days'}],
-    mgmt:['Irrigation scheduling'], mgmtNote:'Moisture stress risk flagged at the pre-planting soil test — following up on irrigation response.', conservation:'',
+    inputs:[{type:'water', product:'Supplementary irrigation', rate:'2x/week if no rain within 5 days', reason:'Moisture stress risk flagged at the pre-planting soil test'}],
+    mgmt:['Irrigation scheduling'], mgmtNote:'Following up on irrigation response.', conservation:'',
     nextVisitDays:14, nextPhase:'Mid-season / pest follow-up'},
 ];
 let visitSeq = 5;
@@ -520,9 +534,12 @@ function renderLogForm(){
   const el = document.getElementById('logform-body');
   if (!draftVisit.phase) draftVisit.phase = draftVisit.type==='individual' && !FARMERS.find(f=>f.id===draftVisit.farmerId)?.lastVisitDate ? 'Initial registration' : 'Pre-planting';
   if (!draftVisit.severity) draftVisit.severity = 'None';
-  if (!draftVisit.plantHealth) draftVisit.plantHealth = {leaf:'Healthy green', deficiency:'None suspected', note:''};
+  if (!draftVisit.issueTypes) draftVisit.issueTypes = [];
+  if (!draftVisit.issueDetails) draftVisit.issueDetails = {};
+  if (draftVisit.photoTaken === undefined) draftVisit.photoTaken = false;
+  if (!draftVisit.plantHealth) draftVisit.plantHealth = {leaf:'Healthy green', root:'Not inspected', growth:'On track for stage', deficiency:'None suspected', note:''};
   if (!draftVisit.inputsOn) draftVisit.inputsOn = {};
-  if (!draftVisit.inputNotes) draftVisit.inputNotes = {};
+  if (!draftVisit.inputDetails) draftVisit.inputDetails = {};
   if (!draftVisit.mgmt) draftVisit.mgmt = [];
   if (draftVisit.soilOn === undefined) draftVisit.soilOn = false;
   if (draftVisit.conservationOn === undefined) draftVisit.conservationOn = false;
@@ -537,19 +554,29 @@ function renderLogForm(){
       '<p style="margin:0;font-size:11.5px;color:var(--ink-3)">The sections below change with the phase — there\'s no crop to scout or assess before it\'s planted.</p>' +
     '</div>' +
 
-    (sec.scouting ? (
-    '<div class="card">' +
-      '<span class="sec-label">🔎 Crop scouting &amp; inspection</span>' +
-      '<textarea class="ta" id="fv-scouting" placeholder="Early signs of disease, insects or weeds you observed…">' + escapeHtml(draftVisit.scouting||'') + '</textarea>' +
-      '<div class="chipgroup" id="severity-chips" style="margin-top:10px"></div>' +
-    '</div>') : '') +
+    (sec.scouting ? (() => {
+      const tier = scoutingTier(draftVisit.severity);
+      return '<div class="card">' +
+        '<span class="sec-label">🔎 Crop scouting &amp; inspection</span>' +
+        '<div class="field"><label>Severity / scouting level</label><div class="chipgroup" id="severity-chips"></div></div>' +
+        (tier === 'none'
+          ? '<p style="margin:0 0 10px;font-size:12.5px;color:var(--ink-3)">No signs of disease, insects or weeds observed.</p>'
+          : '<div class="field"><label>What did you find?</label><div class="chipgroup" id="issue-type-chips"></div></div>' +
+            (tier === 'detailed' ? draftVisit.issueTypes.map(k => renderIssueDetailBlock(k)).join('') : '')
+        ) +
+        '<textarea class="ta" id="fv-scouting" placeholder="Additional observations…">' + escapeHtml(draftVisit.scouting||'') + '</textarea>' +
+        '<button type="button" class="selectchip ' + (draftVisit.photoTaken?'active':'') + '" style="margin-top:8px" onclick="togglePhotoTaken()">📷 ' + (draftVisit.photoTaken?'Photo taken':'No photo taken') + '</button>' +
+      '</div>';
+    })() : '') +
 
     (sec.planthealth ? (
     '<div class="card">' +
       '<span class="sec-label">🌱 Evaluating plant health</span>' +
       '<div class="field"><label>Leaf colour</label><div class="chipgroup" id="leaf-chips"></div></div>' +
+      '<div class="field"><label>Root development</label><div class="chipgroup" id="root-chips"></div></div>' +
+      '<div class="field"><label>Overall growth vs. expected stage</label><div class="chipgroup" id="growth-chips"></div></div>' +
       '<div class="field"><label>Suspected nutrient deficiency</label><div class="chipgroup" id="def-chips"></div></div>' +
-      '<textarea class="ta" id="fv-planthealth-note" placeholder="Root development, growth stage, anything else…">' + escapeHtml(draftVisit.plantHealth.note||'') + '</textarea>' +
+      '<textarea class="ta" id="fv-planthealth-note" placeholder="Anything else worth noting…">' + escapeHtml(draftVisit.plantHealth.note||'') + '</textarea>' +
     '</div>') : '') +
 
     (sec.soil ? (
@@ -597,9 +624,31 @@ function renderLogForm(){
     '<button class="btn" onclick="saveVisit()">✓ Save visit</button>';
 
   renderChipGroup('phase-chips', PHASES, draftVisit.phase, false, v => { draftVisit.phase = v; renderLogForm(); });
-  if (sec.scouting) renderChipGroup('severity-chips', SEVERITIES.map(s=>s.k), draftVisit.severity, false, v => { draftVisit.severity = v; renderLogForm(); }, SEVERITIES);
+  if (sec.scouting){
+    renderChipGroup('severity-chips', SEVERITIES.map(s=>s.k), draftVisit.severity, false, v => { draftVisit.severity = v; renderLogForm(); }, SEVERITIES);
+    const tier = scoutingTier(draftVisit.severity);
+    if (tier !== 'none'){
+      const issueLabels = Object.fromEntries(ISSUE_TYPES.map(i => [i.k, i.label]));
+      renderChipGroup('issue-type-chips', ISSUE_TYPES.map(i=>i.k), draftVisit.issueTypes, true, v => {
+        const i = draftVisit.issueTypes.indexOf(v);
+        if (i === -1) draftVisit.issueTypes.push(v); else draftVisit.issueTypes.splice(i,1);
+        syncFormText(); renderLogForm();
+      }, null, null, issueLabels);
+      if (tier === 'detailed'){
+        draftVisit.issueTypes.forEach(k => {
+          renderChipGroup('extent-chips-' + k, EXTENT_OPTIONS, (draftVisit.issueDetails[k]||{}).extent || '', false, v => {
+            if (!draftVisit.issueDetails[k]) draftVisit.issueDetails[k] = {name:'', extent:''};
+            draftVisit.issueDetails[k].extent = v;
+            renderLogForm();
+          });
+        });
+      }
+    }
+  }
   if (sec.planthealth){
     renderChipGroup('leaf-chips', LEAF_COLORS, draftVisit.plantHealth.leaf, false, v => { draftVisit.plantHealth.leaf = v; syncFormText(); renderLogForm(); });
+    renderChipGroup('root-chips', ROOT_OPTIONS, draftVisit.plantHealth.root, false, v => { draftVisit.plantHealth.root = v; syncFormText(); renderLogForm(); });
+    renderChipGroup('growth-chips', GROWTH_OPTIONS, draftVisit.plantHealth.growth, false, v => { draftVisit.plantHealth.growth = v; syncFormText(); renderLogForm(); });
     renderChipGroup('def-chips', DEFICIENCIES, draftVisit.plantHealth.deficiency, false, v => { draftVisit.plantHealth.deficiency = v; syncFormText(); renderLogForm(); });
   }
   if (sec.mgmt) renderChipGroup('mgmt-chips', MGMT_TOPICS, draftVisit.mgmt, true, v => {
@@ -610,7 +659,10 @@ function renderLogForm(){
   renderChipGroup('days-chips', [7,14,21,30], draftVisit.nextVisitDays, false, v => { draftVisit.nextVisitDays = v; renderLogForm(); }, null, 'day');
 
   // re-focus friendly: wire plain inputs to sync on change without full re-render
-  ['fv-scouting','fv-planthealth-note','soil-ph','soil-moisture','soil-n','soil-p','soil-k','soil-note','fv-mgmt-note','fv-conservation'].forEach(id => {
+  const textFieldIds = ['fv-scouting','fv-planthealth-note','soil-ph','soil-moisture','soil-n','soil-p','soil-k','soil-note','fv-mgmt-note','fv-conservation']
+    .concat(draftVisit.issueTypes.map(k => 'issue-name-' + k))
+    .concat(INPUT_TYPES.flatMap(t => ['input-product-'+t.k, 'input-rate-'+t.k, 'input-reason-'+t.k]));
+  textFieldIds.forEach(id => {
     const elx = document.getElementById(id);
     if (elx) elx.addEventListener('input', syncFormText, {once:false});
   });
@@ -620,12 +672,28 @@ function renderLogForm(){
 
 function renderInputRow(t){
   const on = !!draftVisit.inputsOn[t.k];
-  const note = draftVisit.inputNotes[t.k] || '';
+  const d = draftVisit.inputDetails[t.k] || {product:'', rate:'', reason:''};
   return '<div class="inputrow">' +
     '<div class="hd" onclick="toggleInput(\'' + t.k + '\')"><span class="lbl">' + t.label + '</span><input type="checkbox" ' + (on?'checked':'') + ' onclick="event.stopPropagation();toggleInput(\'' + t.k + '\')"></div>' +
-    '<div class="reveal ' + (on?'open':'') + '" id="input-reveal-' + t.k + '"><input type="text" id="input-note-' + t.k + '" value="' + escapeHtml(note) + '" placeholder="' + t.ph + '" style="margin-top:8px;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px"></div>' +
+    '<div class="reveal ' + (on?'open':'') + '" id="input-reveal-' + t.k + '">' +
+      '<div class="grid2" style="margin-top:8px">' +
+        '<input type="text" id="input-product-' + t.k + '" value="' + escapeHtml(d.product||'') + '" placeholder="' + t.productPh + '" style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px">' +
+        '<input type="text" id="input-rate-' + t.k + '" value="' + escapeHtml(d.rate||'') + '" placeholder="' + t.ratePh + '" style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px">' +
+      '</div>' +
+      '<input type="text" id="input-reason-' + t.k + '" value="' + escapeHtml(d.reason||'') + '" placeholder="Why (optional)" style="margin-top:8px;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px">' +
+    '</div>' +
   '</div>';
 }
+function renderIssueDetailBlock(k){
+  const it = ISSUE_TYPES.find(x => x.k === k);
+  const d = draftVisit.issueDetails[k] || {};
+  return '<div class="inputrow">' +
+    '<div style="font-size:13px;font-weight:650;margin-bottom:6px">' + it.label + '</div>' +
+    '<input type="text" id="issue-name-' + k + '" value="' + escapeHtml(d.name||'') + '" placeholder="Species / name, e.g. Fall armyworm" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:8px">' +
+    '<div class="chipgroup" id="extent-chips-' + k + '"></div>' +
+  '</div>';
+}
+function togglePhotoTaken(){ draftVisit.photoTaken = !draftVisit.photoTaken; renderLogForm(); }
 function toggleInput(k){
   draftVisit.inputsOn[k] = !draftVisit.inputsOn[k];
   renderLogForm();
@@ -641,10 +709,17 @@ function syncFormText(){
   draftVisit.mgmtNote = g('fv-mgmt-note');
   draftVisit.conservation = g('fv-conservation');
   draftVisit.soilTest = (sec.soil && draftVisit.soilOn) ? {ph:g('soil-ph'), moisture:g('soil-moisture'), n:g('soil-n'), p:g('soil-p'), k:g('soil-k'), note:g('soil-note')} : null;
-  INPUT_TYPES.forEach(t => { const e = document.getElementById('input-note-'+t.k); if (e) draftVisit.inputNotes[t.k] = e.value; });
+  draftVisit.issueTypes.forEach(k => {
+    const n = document.getElementById('issue-name-' + k);
+    if (n){ if (!draftVisit.issueDetails[k]) draftVisit.issueDetails[k] = {name:'', extent:''}; draftVisit.issueDetails[k].name = n.value; }
+  });
+  INPUT_TYPES.forEach(t => {
+    const p = document.getElementById('input-product-'+t.k);
+    if (p) draftVisit.inputDetails[t.k] = {product: p.value, rate: g('input-rate-'+t.k), reason: g('input-reason-'+t.k)};
+  });
 }
 
-function renderChipGroup(elId, options, selected, multi, onSelect, colored, suffix){
+function renderChipGroup(elId, options, selected, multi, onSelect, colored, suffix, labelMap){
   const el = document.getElementById(elId);
   if (!el) return;
   const isActive = v => multi ? selected.includes(v) : selected === v;
@@ -652,7 +727,7 @@ function renderChipGroup(elId, options, selected, multi, onSelect, colored, suff
     let cls = 'selectchip';
     if (colored){ const found = colored.find(c=>c.k===v); if (found && found.cls) cls += ' ' + found.cls; }
     if (isActive(v)) cls += ' active';
-    const display = suffix === 'day' ? ('+' + v + 'd') : v;
+    const display = labelMap ? (labelMap[v]||v) : (suffix === 'day' ? ('+' + v + 'd') : v);
     return '<button class="' + cls + '" onclick="chipPick(\'' + elId + '\',\'' + String(v).replace(/'/g,"\\'") + '\')">' + display + '</button>';
   }).join('');
   el.dataset.onselect = '';
@@ -671,7 +746,11 @@ function saveVisit(){
   if (isIndividual && !farmer) return;
 
   const sec = phaseSections(draftVisit.phase);
-  const inputs = sec.inputs ? INPUT_TYPES.filter(t => draftVisit.inputsOn[t.k]).map(t => ({type:t.k, note: draftVisit.inputNotes[t.k] || ''})) : [];
+  const inputs = sec.inputs ? INPUT_TYPES.filter(t => draftVisit.inputsOn[t.k]).map(t => {
+    const d = draftVisit.inputDetails[t.k] || {product:'', rate:'', reason:''};
+    return {type:t.k, product:d.product||'', rate:d.rate||'', reason:d.reason||''};
+  }) : [];
+  const tier = sec.scouting ? scoutingTier(draftVisit.severity) : 'none';
 
   const record = {
     id: 'VL-' + (3000 + (visitSeq++)),
@@ -684,6 +763,9 @@ function saveVisit(){
     sections: sec,
     scouting: sec.scouting ? (draftVisit.scouting || '') : '',
     severity: sec.scouting ? draftVisit.severity : 'None',
+    issueTypes: tier !== 'none' ? draftVisit.issueTypes.slice() : [],
+    issueDetails: tier === 'detailed' ? Object.fromEntries(draftVisit.issueTypes.map(k => [k, {...(draftVisit.issueDetails[k]||{name:'',extent:''})}])) : {},
+    photoTaken: sec.scouting ? !!draftVisit.photoTaken : false,
     plantHealth: sec.planthealth ? {...draftVisit.plantHealth} : null,
     soilTest: draftVisit.soilTest,
     inputs,
@@ -746,10 +828,23 @@ function renderVisitDetail(){
   const sec = v.sections || phaseSections(v.phase);
   el.innerHTML =
     '<div class="card"><h3>' + v.farmerName + '</h3><p style="margin:0;font-size:12.5px;color:var(--ink-3)">' + v.location + ' · ' + fmtDate(v.date) + ' · ' + v.phase + '</p></div>' +
-    (sec.scouting ? '<div class="card"><span class="sec-label">Scouting</span><p style="margin:0;font-size:13.5px">' + escapeHtml(v.scouting||'—') + '</p><span class="chip ' + (v.severity==='None'||v.severity==='Low'?'green':v.severity==='Moderate'?'amber':'clay') + '" style="margin-top:8px">' + v.severity + ' severity</span></div>' : '') +
-    (sec.planthealth && v.plantHealth ? '<div class="card"><span class="sec-label">Plant health</span><p style="margin:0 0 6px;font-size:13.5px">Leaf: ' + v.plantHealth.leaf + ' · Deficiency: ' + v.plantHealth.deficiency + '</p>' + (v.plantHealth.note ? '<p style="margin:0;font-size:13px;color:var(--ink-2)">' + escapeHtml(v.plantHealth.note) + '</p>' : '') + '</div>' : '') +
+    (sec.scouting ? '<div class="card"><span class="sec-label">Scouting</span><p style="margin:0;font-size:13.5px">' + escapeHtml(v.scouting||'—') + '</p>' +
+      '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><span class="chip ' + (v.severity==='None'||v.severity==='Low'?'green':v.severity==='Moderate'?'amber':'clay') + '">' + v.severity + ' severity</span>' + (v.photoTaken ? '<span class="chip blue">📷 Photo taken</span>' : '') + '</div>' +
+      (v.issueTypes && v.issueTypes.length ? '<div style="margin-top:8px">' + v.issueTypes.map(k => {
+        const it = ISSUE_TYPES.find(x=>x.k===k);
+        const d = (v.issueDetails||{})[k];
+        return '<p style="margin:0 0 4px;font-size:13px">' + (it?it.label:k) + (d && d.name ? ' — ' + escapeHtml(d.name) : '') + (d && d.extent ? ' (' + d.extent + ')' : '') + '</p>';
+      }).join('') + '</div>' : '') +
+    '</div>' : '') +
+    (sec.planthealth && v.plantHealth ? '<div class="card"><span class="sec-label">Plant health</span>' +
+      '<p style="margin:0 0 6px;font-size:13.5px">Leaf: ' + v.plantHealth.leaf + ' · Root: ' + (v.plantHealth.root||'—') + '</p>' +
+      '<p style="margin:0 0 6px;font-size:13.5px">Growth: ' + (v.plantHealth.growth||'—') + ' · Deficiency: ' + v.plantHealth.deficiency + '</p>' +
+      (v.plantHealth.note ? '<p style="margin:0;font-size:13px;color:var(--ink-2)">' + escapeHtml(v.plantHealth.note) + '</p>' : '') + '</div>' : '') +
     (v.soilTest ? '<div class="card"><span class="sec-label">Soil test</span><div class="statrow"><div class="stat"><div class="k">pH</div><div class="v">' + v.soilTest.ph + '</div></div><div class="stat"><div class="k">Moisture</div><div class="v">' + v.soilTest.moisture + '</div></div><div class="stat"><div class="k">N-P-K</div><div class="v" style="font-size:13px">' + v.soilTest.n + ' / ' + v.soilTest.p + ' / ' + v.soilTest.k + '</div></div></div>' + (v.soilTest.note ? '<p style="margin:8px 0 0;font-size:13px;color:var(--ink-2)">' + escapeHtml(v.soilTest.note) + '</p>' : '') + '</div>' : '')  +
-    (v.inputs && v.inputs.length ? '<div class="card"><span class="sec-label">Inputs recommended</span>' + v.inputs.map(i => '<p style="margin:0 0 6px;font-size:13.5px">' + (INPUT_TYPES.find(t=>t.k===i.type)||{label:i.type}).label + ' — ' + escapeHtml(i.note) + '</p>').join('') + '</div>' : '') +
+    (v.inputs && v.inputs.length ? '<div class="card"><span class="sec-label">Inputs recommended</span>' + v.inputs.map(i => {
+      const t = INPUT_TYPES.find(x=>x.k===i.type) || {label:i.type};
+      return '<p style="margin:0 0 8px;font-size:13.5px">' + t.label + ' — ' + escapeHtml(i.product||'—') + (i.rate ? ' · ' + escapeHtml(i.rate) : '') + (i.reason ? '<br><span style="color:var(--ink-3);font-size:12px">' + escapeHtml(i.reason) + '</span>' : '') + '</p>';
+    }).join('') + '</div>' : '') +
     ((v.mgmt&&v.mgmt.length)||v.mgmtNote ? '<div class="card"><span class="sec-label">Management discussion</span>' + (v.mgmt&&v.mgmt.length ? v.mgmt.map(m=>'<span class="chip blue" style="margin:0 6px 6px 0">'+m+'</span>').join('') : '') + (v.mgmtNote ? '<p style="margin:8px 0 0;font-size:13.5px">' + escapeHtml(v.mgmtNote) + '</p>' : '') + '</div>' : '') +
     (v.conservation ? '<div class="card"><span class="sec-label">Environmental conservation</span><p style="margin:0;font-size:13.5px">' + escapeHtml(v.conservation) + '</p></div>' : '') +
     '<div class="card"><span class="sec-label">Next visit</span><span class="chip blue">' + v.nextPhase + '</span> <span class="chip grey">+' + v.nextVisitDays + 'd</span></div>';
