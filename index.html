@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agronomy — Field Activity Log Mockup</title>
+<style>
+:root{
+  --bg:#fbfaf7;--surface:#fff;--surface-2:#f4f2ed;--line:#e3ded3;
+  --ink:#1c1f1a;--ink-2:#4b5148;--ink-3:#787f76;
+  --green:#1f6f4a;--green-soft:#e7f2ea;
+  --amber:#b5720d;--amber-soft:#fbf1df;
+  --clay:#9c4221;--clay-soft:#fbeae2;
+  --blue:#25557d;--blue-soft:#e6eef5;
+  --violet:#5b4a8a;--violet-soft:#eeeaf7;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --serif:ui-serif,Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+:root[data-theme="dark"]{
+  --bg:#12140f;--surface:#191c16;--surface-2:#21251d;--line:#32372c;
+  --ink:#eef0e9;--ink-2:#b8beb2;--ink-3:#8b9184;
+  --green:#6fc496;--green-soft:#17301f;--amber:#e3a955;--amber-soft:#332715;
+  --clay:#e08f6b;--clay-soft:#33201a;--blue:#7fb3dd;--blue-soft:#16242f;
+  --violet:#b3a3e0;--violet-soft:#221d33;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.topbar{max-width:900px;margin:0 auto;padding:28px 24px 10px;position:relative}
+.eyebrow{display:inline-block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--green);background:var(--green-soft);padding:5px 12px;border-radius:999px;font-weight:650}
+h1{font-family:var(--serif);font-size:clamp(24px,4vw,32px);line-height:1.15;margin:14px 0 8px;font-weight:600;letter-spacing:-.02em}
+.lede{font-size:15px;color:var(--ink-2);max-width:70ch;margin:0 0 18px}
+.themebtn{position:absolute;top:28px;right:24px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);border-radius:999px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:var(--sans)}
+.stage{max-width:900px;margin:0 auto;padding:10px 24px 90px;display:flex;justify-content:center;gap:26px;flex-wrap:wrap;align-items:flex-start}
+.side-note{max-width:250px;font-size:13px;color:var(--ink-3);padding-top:18px}
+.side-note b{color:var(--ink-2);display:block;margin-bottom:4px;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.side-note ul{padding-left:18px;margin:8px 0 0}
+.side-note li{margin-bottom:6px}
+
+.phone{width:372px;background:#14150f;border-radius:44px;padding:12px;box-shadow:0 30px 60px -22px rgba(0,0,0,.35);position:relative;flex-shrink:0}
+.phone .notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:22px;background:#14150f;border-radius:0 0 14px 14px;z-index:5}
+.screenarea{width:100%;height:800px;background:var(--bg);border-radius:32px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.statusbar{display:flex;justify-content:space-between;padding:12px 22px 2px;font-family:var(--mono);font-size:12px;color:var(--ink);flex-shrink:0}
+.appbar{padding:6px 18px 14px;border-bottom:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;gap:10px;min-height:20px}
+.appbar .back{border:0;background:none;color:var(--ink-2);font-size:18px;cursor:pointer;padding:0;line-height:1}
+.appbar h2{font-family:var(--serif);font-size:18px;margin:0;font-weight:650;flex:1}
+.appbar .sub{font-size:11.5px;color:var(--ink-3);display:block;margin-top:1px}
+.appbar .signout{border:1px solid var(--line);background:var(--surface);color:var(--ink-3);border-radius:999px;padding:4px 10px;font-size:11px;cursor:pointer}
+.content{flex:1;overflow-y:auto;padding:14px 18px 20px}
+.bottomnav{display:flex;border-top:1px solid var(--line);background:var(--surface);flex-shrink:0}
+.bottomnav button{flex:1;border:0;background:none;padding:9px 0 12px;font-family:var(--sans);font-size:10.5px;color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+.bottomnav button .ic{font-size:18px}
+.bottomnav button.active{color:var(--green);font-weight:700}
+.screen{display:none;flex-direction:column;height:100%}
+.screen.active{display:flex}
+.toaststack{position:absolute;top:44px;left:12px;right:12px;z-index:20;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{background:var(--surface);border:1px solid var(--green);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:12.5px;box-shadow:0 10px 24px -10px rgba(0,0,0,.3);opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translateY(0)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+.card h3{margin:0 0 8px;font-size:14.5px;font-weight:700}
+.card .sec-label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);font-weight:700;display:block;margin-bottom:8px}
+.statrow{display:flex;gap:10px;flex-wrap:wrap}
+.statrow .stat{flex:1;min-width:120px;background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.statrow .stat .k{font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+.statrow .stat .v{font-size:17px;font-weight:700;margin-top:2px}
+.chip{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:.02em}
+.chip.green{background:var(--green-soft);color:var(--green)}
+.chip.amber{background:var(--amber-soft);color:var(--amber)}
+.chip.clay{background:var(--clay-soft);color:var(--clay)}
+.chip.blue{background:var(--blue-soft);color:var(--blue)}
+.chip.violet{background:var(--violet-soft);color:var(--violet)}
+.chip.grey{background:var(--surface-2);color:var(--ink-3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--green);background:var(--green);color:#fff;padding:10px 16px;border-radius:11px;font-size:13.5px;font-weight:650;cursor:pointer;width:100%}
+.btn.secondary{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn.sm{width:auto;padding:7px 12px;font-size:12.5px}
+
+.selectchip{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);padding:7px 12px;border-radius:999px;font-size:12.5px;cursor:pointer;margin:0 6px 6px 0}
+.selectchip.active{border-color:var(--green);background:var(--green-soft);color:var(--green);font-weight:700}
+.selectchip.sev-amber.active{border-color:var(--amber);background:var(--amber-soft);color:var(--amber)}
+.selectchip.sev-clay.active{border-color:var(--clay);background:var(--clay-soft);color:var(--clay)}
+.chipgroup{margin-bottom:14px}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:650;color:var(--ink-2);margin-bottom:5px}
+.field input[type=text],.field input[type=number],.field select,textarea.ta{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-family:var(--sans);font-size:13.5px;background:var(--surface);color:var(--ink)}
+textarea.ta{resize:vertical;min-height:60px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;cursor:pointer}
+.toggle-row .lbl{font-size:13.5px;font-weight:650}
+.toggle-row .lbl small{display:block;font-weight:400;color:var(--ink-3);font-size:11.5px}
+.switch{width:38px;height:22px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);position:relative;flex-shrink:0}
+.switch::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--ink-3);transition:transform .15s,background .15s}
+.switch.on{background:var(--green-soft);border-color:var(--green)}
+.switch.on::after{transform:translateX(16px);background:var(--green)}
+.reveal{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);display:none}
+.reveal.open{display:block}
+
+.inputrow{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.inputrow .hd{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.inputrow .hd .lbl{font-size:13px;font-weight:650}
+.inputrow input[type=checkbox]{width:16px;height:16px}
+
+.dchip{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);padding:7px 10px;border-radius:8px;font-size:12.5px;cursor:pointer;margin:0 6px 6px 0;font-family:var(--mono)}
+.dchip.active{border-color:var(--green);background:var(--green-soft);color:var(--green);font-weight:700}
+
+.tkcard{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer;background:var(--surface)}
+.tkcard:hover{border-color:var(--green)}
+.tkcard .row1{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:8px}
+.tkcard .qtext{font-size:13px;color:var(--ink-2);margin:0 0 4px}
+.tkcard .meta{font-size:11px;color:var(--ink-3)}
+.empty{text-align:center;color:var(--ink-3);font-size:13px;padding:40px 10px}
+
+.faq{border-bottom:1px solid var(--line);padding:10px 0}
+.faq summary{cursor:pointer;font-weight:650;font-size:13.5px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary .arrow{color:var(--ink-3);transition:transform .15s}
+.faq[open] summary .arrow{transform:rotate(90deg)}
+.faq p{color:var(--ink-2);font-size:13px;margin:8px 0 0}
+
+.login-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 24px;gap:16px}
+.login-wrap .badge{width:64px;height:64px;border-radius:50%;background:var(--green-soft);display:flex;align-items:center;justify-content:center;font-size:28px}
+.filterbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filterbar button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);padding:6px 12px;border-radius:999px;font-size:12px;cursor:pointer}
+.filterbar button.active{border-color:var(--green);background:var(--green-soft);color:var(--green);font-weight:700}
+
+footer{max-width:900px;margin:0 auto;padding:10px 24px 60px;color:var(--ink-3);font-size:13px}
+footer .card{max-width:none}
+footer details summary{cursor:pointer;font-weight:650;color:var(--ink-2);margin-bottom:8px}
+footer ol,footer ul{padding-left:20px}
+footer li{margin-bottom:6px}
+@media (max-width:750px){.side-note{display:none}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="themebtn" onclick="var r=document.documentElement;r.dataset.theme=(r.dataset.theme==='dark'?'light':'dark')">◐ theme</button>
+  <span class="eyebrow">Agriva · Agronomy</span>
+  <h1>Field activity log — the Agronomy role</h1>
+  <p class="lede">A separate mock from the advisory-ticket flow. This one is scoped to a single new role: <strong>Agronomy</strong> signs in, sees which farmers are due a visit, and logs each visit — crop scouting, plant health, soil sampling, input recommendations, management discussion — then schedules the next phase. Static mockup, placeholder data, nothing built.</p>
+</div>
+
+<div class="stage">
+<div class="phone" id="agro">
+  <div class="notch"></div>
+  <div class="screenarea">
+    <div class="toaststack" id="agro-toasts"></div>
+    <div class="statusbar"><span>9:41</span><span>●●● Agriva Agronomy</span></div>
+
+    <!-- LOGIN -->
+    <div class="screen active" data-screen="login">
+      <div class="login-wrap">
+        <div class="badge">🌿</div>
+        <div style="text-align:center">
+          <h2 style="font-family:var(--serif);margin:0 0 4px">Agriva Agronomy</h2>
+          <p style="color:var(--ink-3);font-size:13px;margin:0">Field visits, scouting &amp; advisory log</p>
+        </div>
+        <button class="btn" style="width:220px" onclick="signIn()">Sign in as Dr. Meseret Tadesse</button>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <div class="screen" data-screen="home">
+      <div class="appbar"><div><h2 id="home-greet">Good morning</h2><span class="sub" id="home-date"></span></div><button class="signout" onclick="signOut()">Sign out</button></div>
+      <div class="content">
+        <div class="statrow" style="margin-bottom:14px">
+          <div class="stat"><div class="k">Visited, 7d</div><div class="v" id="stat-visited7">0</div></div>
+          <div class="stat"><div class="k">Soil tests, 30d</div><div class="v" id="stat-soil30">0</div></div>
+          <div class="stat"><div class="k">Due this week</div><div class="v" id="stat-duesoon">0</div></div>
+          <div class="stat"><div class="k">Overdue</div><div class="v" id="stat-overdue">0</div></div>
+        </div>
+        <button class="btn" onclick="openLogPick()">➕ Log a visit</button>
+        <h3 style="margin:20px 0 8px">Today's schedule</h3>
+        <div id="home-schedule"></div>
+      </div>
+      <div class="bottomnav">
+        <button class="active" onclick="showScreen('home')"><span class="ic">🏠</span>Home</button>
+        <button onclick="showScreen('farmers')"><span class="ic">🌾</span>Farmers</button>
+        <button onclick="showScreen('history')"><span class="ic">🗂</span>History</button>
+        <button onclick="showScreen('trials')"><span class="ic">🧪</span>Trials</button>
+      </div>
+    </div>
+
+    <!-- FARMERS -->
+    <div class="screen" data-screen="farmers">
+      <div class="appbar"><h2>My farmers</h2></div>
+      <div class="content" id="farmers-list"></div>
+      <div class="bottomnav">
+        <button onclick="showScreen('home')"><span class="ic">🏠</span>Home</button>
+        <button class="active" onclick="showScreen('farmers')"><span class="ic">🌾</span>Farmers</button>
+        <button onclick="showScreen('history')"><span class="ic">🗂</span>History</button>
+        <button onclick="showScreen('trials')"><span class="ic">🧪</span>Trials</button>
+      </div>
+    </div>
+
+    <!-- FARMER DETAIL -->
+    <div class="screen" data-screen="farmerdetail">
+      <div class="appbar"><button class="back" onclick="showScreen('farmers')">←</button><h2 id="fd-name">Farmer</h2></div>
+      <div class="content" id="farmerdetail-body"></div>
+    </div>
+
+    <!-- LOG PICK -->
+    <div class="screen" data-screen="logpick">
+      <div class="appbar"><button class="back" onclick="showScreen('home')">←</button><h2>Log a visit</h2></div>
+      <div class="content" id="logpick-body"></div>
+    </div>
+
+    <!-- LOG FORM -->
+    <div class="screen" data-screen="logform">
+      <div class="appbar"><button class="back" onclick="showScreen('logpick')">←</button><div><h2>Visit log</h2><span class="sub" id="logform-sub"></span></div></div>
+      <div class="content" id="logform-body"></div>
+    </div>
+
+    <!-- LOG DONE -->
+    <div class="screen" data-screen="logdone">
+      <div class="content" id="logdone-body" style="display:flex;flex-direction:column;justify-content:center;height:100%"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="screen" data-screen="history">
+      <div class="appbar"><h2>Activity log</h2></div>
+      <div class="content">
+        <div class="filterbar" id="history-filterbar"></div>
+        <div id="history-list"></div>
+      </div>
+      <div class="bottomnav">
+        <button onclick="showScreen('home')"><span class="ic">🏠</span>Home</button>
+        <button onclick="showScreen('farmers')"><span class="ic">🌾</span>Farmers</button>
+        <button class="active" onclick="showScreen('history')"><span class="ic">🗂</span>History</button>
+        <button onclick="showScreen('trials')"><span class="ic">🧪</span>Trials</button>
+      </div>
+    </div>
+
+    <!-- VISIT DETAIL -->
+    <div class="screen" data-screen="visitdetail">
+      <div class="appbar"><button class="back" onclick="showScreen('history')">←</button><h2>Visit detail</h2></div>
+      <div class="content" id="visitdetail-body"></div>
+    </div>
+
+    <!-- TRIALS -->
+    <div class="screen" data-screen="trials">
+      <div class="appbar"><h2>Field trials</h2></div>
+      <div class="content" id="trials-list"></div>
+      <div class="bottomnav">
+        <button onclick="showScreen('home')"><span class="ic">🏠</span>Home</button>
+        <button onclick="showScreen('farmers')"><span class="ic">🌾</span>Farmers</button>
+        <button onclick="showScreen('history')"><span class="ic">🗂</span>History</button>
+        <button class="active" onclick="showScreen('trials')"><span class="ic">🧪</span>Trials</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div class="side-note">
+  <b>Six responsibilities → where they live</b>
+  <ul>
+    <li><strong>Crop scouting &amp; plant health</strong> — Scouting + Plant health sections of the visit form</li>
+    <li><strong>Soil management</strong> — Soil sampling section (pH, moisture, N-P-K)</li>
+    <li><strong>Recommending inputs</strong> — fertiliser / seed / herbicide / water toggles</li>
+    <li><strong>Management strategy discussion</strong> — crop rotation, cultivation, harvest timing</li>
+    <li><strong>Environmental conservation</strong> — optional note on the visit form</li>
+    <li><strong>Agricultural extension</strong> — "Group extension session" visit type</li>
+    <li><strong>Agricultural research</strong> — separate Trials tab</li>
+  </ul>
+</div>
+</div>
+
+<footer>
+  <div class="card">
+    <details>
+      <summary>Scope &amp; assumptions</summary>
+      <ul>
+        <li>Single hardcoded sign-in (Dr. Meseret Tadesse) — no real auth.</li>
+        <li>Farmers list, visit history and trials are seeded placeholder data, dates computed relative to today so the demo always looks current.</li>
+        <li>"Next visit in N days" is a simple offset — no calendar/holiday awareness, no reminder/notification delivery.</li>
+        <li>This mock does not include the AI-confidence/cap ticket flow from <code>AGRONOMY-ADVISORY-SOLUTION-FLOW.html</code> — that's a separate concern (farmer-initiated questions) from this one (agronomist-initiated field visits).</li>
+        <li>No API shapes, entities or endpoints implied — click-through only, for review before anything is built.</li>
+      </ul>
+    </details>
+  </div>
+</footer>
+
+<script>
+const DAY = 24*60*60*1000;
+const today = new Date(); today.setHours(0,0,0,0);
+const addDays = (base,n) => new Date(base.getTime() + n*DAY);
+const daysBetween = (a,b) => Math.round((b-a)/DAY);
+const fmtDate = d => d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+const escapeHtml = s => { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
+
+const AGRONOMIST_NAME = 'Dr. Meseret Tadesse';
+const PHASES = ['Initial registration','Pre-planting','Post-planting','Mid-season / pest follow-up','Pre-harvest','Ad hoc'];
+/* Which sections apply to which phase — there's no crop to scout or assess before it's planted, and a soil-fertility
+   plan mostly gets set at pre-planting, not repeated every visit after. Placeholder judgment call, not agreed with the agronomy team. */
+const PHASE_SECTIONS = {
+  'Initial registration':        {scouting:false, planthealth:false, soil:true,  inputs:false, mgmt:true, conservation:true},
+  'Pre-planting':                 {scouting:false, planthealth:false, soil:true,  inputs:true,  mgmt:true, conservation:true},
+  'Post-planting':                {scouting:true,  planthealth:true,  soil:false, inputs:true,  mgmt:true, conservation:true},
+  'Mid-season / pest follow-up':  {scouting:true,  planthealth:true,  soil:true,  inputs:true,  mgmt:true, conservation:true},
+  'Pre-harvest':                  {scouting:true,  planthealth:true,  soil:false, inputs:false, mgmt:true, conservation:true},
+  'Ad hoc':                       {scouting:true,  planthealth:true,  soil:true,  inputs:true,  mgmt:true, conservation:true},
+};
+const phaseSections = phase => PHASE_SECTIONS[phase] || PHASE_SECTIONS['Ad hoc'];
+const SEVERITIES = [{k:'None',cls:''},{k:'Low',cls:''},{k:'Moderate',cls:'sev-amber'},{k:'High',cls:'sev-clay'},{k:'Critical',cls:'sev-clay'}];
+const LEAF_COLORS = ['Healthy green','Pale / yellowing','Purple tinge','Necrotic spots'];
+const DEFICIENCIES = ['None suspected','Nitrogen','Phosphorus','Potassium','Other'];
+const MGMT_TOPICS = ['Crop rotation plan','Cultivation technique','Harvest timing','Irrigation scheduling','Other'];
+const INPUT_TYPES = [
+  {k:'fertilizer', label:'🌱 Fertilizer / soil amendment', ph:'e.g. Urea top-dress, 50kg/ha'},
+  {k:'seed', label:'🌾 Seed / variety', ph:'e.g. Switch to BH661 next season'},
+  {k:'herbicide', label:'🧪 Herbicide / pesticide', ph:'e.g. Pre-emergent herbicide, spot-spray'},
+  {k:'water', label:'💧 Irrigation / water', ph:'e.g. Increase to 2x/week during flowering'},
+];
+
+let FARMERS = [
+  {id:'f1', name:'Tsehay Bekele', phone:'0911 234 567', location:'Sodo Zuria, Wolaita', crops:'Teff & Maize', lastVisitOffset:-6, nextVisitOffset:1, lastPhase:'Pre-planting', nextPhase:'Post-planting'},
+  {id:'f2', name:'Getachew Alemu', phone:'0922 345 678', location:'Boloso Sore, Wolaita', crops:'Maize & Livestock', lastVisitOffset:-20, nextVisitOffset:-3, lastPhase:'Post-planting', nextPhase:'Mid-season / pest follow-up'},
+  {id:'f3', name:'Amina Yusuf', phone:'0933 456 789', location:'Halaba, SNNPR', crops:'Teff', lastVisitOffset:-2, nextVisitOffset:12, lastPhase:'Initial registration', nextPhase:'Pre-planting'},
+  {id:'f4', name:'Wondimu Girma', phone:'0944 567 890', location:'Sodo Zuria, Wolaita', crops:'Maize', lastVisitOffset:null, nextVisitOffset:0, lastPhase:null, nextPhase:'Initial registration'},
+  {id:'f5', name:'Zewditu Kassa', phone:'0955 678 901', location:'Boloso Sore, Wolaita', crops:'Enset & Maize', lastVisitOffset:-35, nextVisitOffset:-10, lastPhase:'Mid-season / pest follow-up', nextPhase:'Pre-harvest'},
+];
+FARMERS.forEach(f => {
+  f.lastVisitDate = f.lastVisitOffset==null ? null : addDays(today, f.lastVisitOffset);
+  f.nextVisitDate = addDays(today, f.nextVisitOffset);
+});
+
+let VISITS = [
+  {id:'VL-3001', type:'individual', farmerId:'f1', farmerName:'Tsehay Bekele', location:'Sodo Zuria, Wolaita', date: addDays(today,-6), phase:'Pre-planting',
+    scouting:'Field clear of weed pressure, no pest signs. Soil looked workable after recent rain.', severity:'None',
+    plantHealth:{leaf:'Healthy green', deficiency:'None suspected', note:'No crop emerged yet — pre-planting visit.'},
+    soilTest:{ph:'6.2', moisture:'Fair', n:'Medium', p:'Medium', k:'High', note:'Suitable for BH661 with standard basal fertiliser.'},
+    inputs:[{type:'fertilizer', note:'DAP at planting, 100kg/ha'}, {type:'seed', note:'BH661, certified seed only'}],
+    mgmt:['Crop rotation plan'], mgmtNote:'Agreed to rotate this plot from maize to teff next season to break pest cycle.',
+    conservation:'Recommended contour ridges on the lower slope to reduce runoff.',
+    nextVisitDays:7, nextPhase:'Post-planting'},
+  {id:'VL-3002', type:'individual', farmerId:'f3', farmerName:'Amina Yusuf', location:'Halaba, SNNPR', date: addDays(today,-2), phase:'Initial registration',
+    scouting:'First visit — field walked, boundary and plot size confirmed.', severity:'None',
+    plantHealth:{leaf:'Healthy green', deficiency:'None suspected', note:'No crop planted yet.'},
+    soilTest:null,
+    inputs:[], mgmt:[], mgmtNote:'', conservation:'',
+    nextVisitDays:14, nextPhase:'Pre-planting'},
+  {id:'VL-3003', type:'group', farmerId:null, farmerName:'Extension session — 12 attendees', location:'Sodo Zuria kebele centre', date: addDays(today,-9), phase:'Mid-season / pest follow-up',
+    scouting:'Trained attendees on identifying early fall armyworm damage on maize whorls.', severity:'Moderate',
+    plantHealth:{leaf:'Pale / yellowing', deficiency:'Nitrogen', note:'Several attendees brought in leaf samples showing early nitrogen deficiency.'},
+    soilTest:null,
+    inputs:[{type:'fertilizer', note:'Top-dress urea recommended where yellowing was shown'}],
+    mgmt:['Cultivation technique'], mgmtNote:'Demonstrated scouting technique — checking whorls for frass before spraying.',
+    conservation:'', nextVisitDays:21, nextPhase:'Pre-harvest'},
+  {id:'VL-3004', type:'individual', farmerId:'f5', farmerName:'Zewditu Kassa', location:'Boloso Sore, Wolaita', date: addDays(today,-35), phase:'Post-planting',
+    scouting:'Even germination on maize. Enset stand healthy.', severity:'Low',
+    plantHealth:{leaf:'Healthy green', deficiency:'None suspected', note:'Good early growth, but soil looked dry at depth from the pre-planting test.'},
+    soilTest:null,
+    inputs:[{type:'water', note:'Advised supplementary irrigation if no rain within 5 days'}],
+    mgmt:['Irrigation scheduling'], mgmtNote:'Moisture stress risk flagged at the pre-planting soil test — following up on irrigation response.', conservation:'',
+    nextVisitDays:14, nextPhase:'Mid-season / pest follow-up'},
+];
+let visitSeq = 5;
+
+let TRIALS = [
+  {id:'FT-01', title:'BH661 vs. local maize variety yield trial', location:'Boloso Sore demo plot', startOffset:-45, status:'Ongoing',
+    log:[{dateOffset:-45, note:'Trial plots marked and planted — 3 replicates each variety.'},
+         {dateOffset:-18, note:'BH661 rows showing more uniform stand establishment.'}]},
+  {id:'FT-02', title:'Compost vs. synthetic fertiliser on teff', location:'Sodo Zuria demo plot', startOffset:-60, status:'Ongoing',
+    log:[{dateOffset:-60, note:'Two strips prepared — compost-amended vs. DAP/urea standard.'}]},
+];
+
+/* ---------- navigation ---------- */
+function signIn(){
+  showScreen('home');
+  document.getElementById('home-greet').textContent = 'Good day, ' + AGRONOMIST_NAME.replace('Dr. ','');
+  document.getElementById('home-date').textContent = today.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'});
+  renderAll();
+}
+function signOut(){ showScreen('login'); }
+
+const TAB_LABELS = {home:'Home', farmers:'Farmers', history:'History', trials:'Trials'};
+function showScreen(screenId){
+  document.querySelectorAll('#agro .screen').forEach(s => s.classList.toggle('active', s.dataset.screen === screenId));
+  if (TAB_LABELS[screenId]){
+    document.querySelectorAll('#agro .bottomnav button').forEach(b => b.classList.toggle('active', b.textContent.includes(TAB_LABELS[screenId])));
+  }
+  renderAll();
+}
+
+function pushToast(msg){
+  const stack = document.getElementById('agro-toasts');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  stack.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 4200);
+}
+
+/* ---------- status helpers ---------- */
+function farmerStatus(f){
+  if (!f.lastVisitDate) return {label:'Never visited', cls:'violet'};
+  const diff = daysBetween(today, f.nextVisitDate);
+  if (diff < 0) return {label:'Overdue ' + Math.abs(diff) + 'd', cls:'clay'};
+  if (diff === 0) return {label:'Due today', cls:'amber'};
+  if (diff <= 3) return {label:'Due in ' + diff + 'd', cls:'amber'};
+  return {label:'Scheduled ' + fmtDate(f.nextVisitDate), cls:'blue'};
+}
+
+/* ---------- home ---------- */
+function renderHomeStats(){
+  const visited7 = new Set(VISITS.filter(v => v.type==='individual' && daysBetween(v.date, today) <= 7 && daysBetween(v.date,today) >= 0).map(v=>v.farmerId)).size;
+  const soil30 = VISITS.filter(v => v.soilTest && daysBetween(v.date, today) <= 30 && daysBetween(v.date,today) >= 0).length;
+  const dueSoon = FARMERS.filter(f => { const d = daysBetween(today, f.nextVisitDate); return d >= 0 && d <= 7; }).length;
+  const overdue = FARMERS.filter(f => daysBetween(today, f.nextVisitDate) < 0).length;
+  document.getElementById('stat-visited7').textContent = visited7;
+  document.getElementById('stat-soil30').textContent = soil30;
+  document.getElementById('stat-duesoon').textContent = dueSoon;
+  document.getElementById('stat-overdue').textContent = overdue;
+}
+
+function renderHomeSchedule(){
+  const el = document.getElementById('home-schedule');
+  const due = FARMERS.filter(f => daysBetween(today, f.nextVisitDate) <= 0).sort((a,b)=>a.nextVisitDate-b.nextVisitDate);
+  if (!due.length){ el.innerHTML = '<p class="empty">Nothing due today — see Farmers for what\'s coming up.</p>'; return; }
+  el.innerHTML = due.map(f => {
+    const st = farmerStatus(f);
+    return '<div class="tkcard"><div class="row1"><strong style="font-size:13px">' + f.name + '</strong><span class="chip ' + st.cls + '">' + st.label + '</span></div>' +
+      '<p class="qtext">' + f.location + ' · ' + f.crops + '</p>' +
+      '<button class="btn sm" onclick="startLogVisit(\'' + f.id + '\')">➕ Log visit</button></div>';
+  }).join('');
+}
+
+/* ---------- farmers list + detail ---------- */
+function renderFarmersList(){
+  const el = document.getElementById('farmers-list');
+  el.innerHTML = FARMERS.slice().sort((a,b)=>a.nextVisitDate-b.nextVisitDate).map(f => {
+    const st = farmerStatus(f);
+    return '<div class="tkcard" onclick="openFarmerDetail(\'' + f.id + '\')"><div class="row1"><strong style="font-size:13.5px">' + f.name + '</strong><span class="chip ' + st.cls + '">' + st.label + '</span></div>' +
+      '<p class="qtext">' + f.location + ' · ' + f.crops + '</p>' +
+      '<div class="meta">' + (f.lastVisitDate ? ('Last visit ' + fmtDate(f.lastVisitDate) + ' — ' + f.lastPhase) : 'Not yet visited') + '</div></div>';
+  }).join('');
+}
+
+function openFarmerDetail(id){
+  currentFarmerId = id;
+  showScreen('farmerdetail');
+  renderFarmerDetail();
+}
+
+function renderFarmerDetail(){
+  const f = FARMERS.find(x => x.id === currentFarmerId);
+  if (!f) return;
+  document.getElementById('fd-name').textContent = f.name;
+  const st = farmerStatus(f);
+  const visits = VISITS.filter(v => v.farmerId === f.id).sort((a,b)=>b.date-a.date);
+  document.getElementById('farmerdetail-body').innerHTML =
+    '<div class="card"><h3>' + f.name + '</h3>' +
+    '<p style="margin:0;font-size:12.5px;color:var(--ink-3)">' + f.phone + ' · ' + f.location + ' · ' + f.crops + '</p>' +
+    '<div style="margin-top:10px"><span class="chip ' + st.cls + '">' + st.label + '</span> <span class="chip grey">Next: ' + f.nextPhase + '</span></div></div>' +
+    '<button class="btn" onclick="startLogVisit(\'' + f.id + '\')">➕ Log a visit</button>' +
+    '<h3 style="margin:18px 0 8px">Visit history</h3>' +
+    (visits.length ? visits.map(v => '<div class="tkcard" onclick="openVisitDetail(\'' + v.id + '\')"><div class="row1"><strong style="font-size:13px">' + v.phase + '</strong><span class="chip grey">' + fmtDate(v.date) + '</span></div><p class="qtext">' + escapeHtml(visitSummary(v)) + '</p></div>').join('')
+      : '<p class="empty">No visits logged yet.</p>');
+}
+
+/* ---------- log visit: pick ---------- */
+let draftVisit = null;
+let currentFarmerId = null;
+
+function openLogPick(){
+  draftVisit = {type:'individual', farmerId:null, groupLocation:'', groupAttendees:''};
+  showScreen('logpick');
+  renderLogPick();
+}
+function startLogVisit(farmerId){
+  draftVisit = {type:'individual', farmerId, groupLocation:'', groupAttendees:''};
+  const f = FARMERS.find(x=>x.id===farmerId);
+  document.getElementById('logform-sub').textContent = f ? f.name + ' · ' + f.location : '';
+  showScreen('logform');
+  renderLogForm();
+}
+function setLogType(type){ draftVisit.type = type; renderLogPick(); }
+function pickLogFarmer(id){
+  draftVisit.farmerId = id;
+  const f = FARMERS.find(x=>x.id===id);
+  document.getElementById('logform-sub').textContent = f.name + ' · ' + f.location;
+  showScreen('logform');
+  renderLogForm();
+}
+function submitGroupInfo(){
+  const loc = document.getElementById('grp-location').value.trim();
+  const att = document.getElementById('grp-attendees').value.trim();
+  const topic = document.getElementById('grp-topic').value.trim();
+  if (!loc){ return; }
+  draftVisit.groupLocation = loc;
+  draftVisit.groupAttendees = att || '—';
+  draftVisit.groupTopic = topic;
+  document.getElementById('logform-sub').textContent = loc + ' · ' + (att||'—') + ' attendees';
+  showScreen('logform');
+  renderLogForm();
+}
+
+function renderLogPick(){
+  const el = document.getElementById('logpick-body');
+  let html = '<div class="chipgroup">' +
+    '<button class="selectchip ' + (draftVisit.type==='individual'?'active':'') + '" onclick="setLogType(\'individual\')">👤 Individual farm visit</button>' +
+    '<button class="selectchip ' + (draftVisit.type==='group'?'active':'') + '" onclick="setLogType(\'group\')">👥 Group extension session</button></div>';
+
+  if (draftVisit.type === 'individual'){
+    html += '<p class="sub" style="font-size:12.5px;color:var(--ink-3)">Who are you visiting?</p>';
+    html += FARMERS.map(f => '<div class="tkcard" onclick="pickLogFarmer(\'' + f.id + '\')"><strong style="font-size:13.5px">' + f.name + '</strong><p class="qtext">' + f.location + ' · ' + f.crops + '</p></div>').join('');
+  } else {
+    html += '<div class="field"><label>Location / kebele centre</label><input type="text" id="grp-location" placeholder="e.g. Sodo Zuria kebele centre"></div>' +
+      '<div class="field"><label>Attendees</label><input type="text" id="grp-attendees" placeholder="e.g. 12"></div>' +
+      '<div class="field"><label>Session topic</label><input type="text" id="grp-topic" placeholder="e.g. Fall armyworm scouting technique"></div>' +
+      '<button class="btn" onclick="submitGroupInfo()">Continue</button>';
+  }
+  el.innerHTML = html;
+}
+
+/* ---------- log visit: form ---------- */
+function renderLogForm(){
+  const el = document.getElementById('logform-body');
+  if (!draftVisit.phase) draftVisit.phase = draftVisit.type==='individual' && !FARMERS.find(f=>f.id===draftVisit.farmerId)?.lastVisitDate ? 'Initial registration' : 'Pre-planting';
+  if (!draftVisit.severity) draftVisit.severity = 'None';
+  if (!draftVisit.plantHealth) draftVisit.plantHealth = {leaf:'Healthy green', deficiency:'None suspected', note:''};
+  if (!draftVisit.inputsOn) draftVisit.inputsOn = {};
+  if (!draftVisit.inputNotes) draftVisit.inputNotes = {};
+  if (!draftVisit.mgmt) draftVisit.mgmt = [];
+  if (draftVisit.soilOn === undefined) draftVisit.soilOn = false;
+  if (draftVisit.conservationOn === undefined) draftVisit.conservationOn = false;
+  if (!draftVisit.nextVisitDays) draftVisit.nextVisitDays = 14;
+
+  const sec = phaseSections(draftVisit.phase);
+
+  el.innerHTML =
+    '<div class="card">' +
+      '<span class="sec-label">Visit phase</span>' +
+      '<div class="chipgroup" id="phase-chips"></div>' +
+      '<p style="margin:0;font-size:11.5px;color:var(--ink-3)">The sections below change with the phase — there\'s no crop to scout or assess before it\'s planted.</p>' +
+    '</div>' +
+
+    (sec.scouting ? (
+    '<div class="card">' +
+      '<span class="sec-label">🔎 Crop scouting &amp; inspection</span>' +
+      '<textarea class="ta" id="fv-scouting" placeholder="Early signs of disease, insects or weeds you observed…">' + escapeHtml(draftVisit.scouting||'') + '</textarea>' +
+      '<div class="chipgroup" id="severity-chips" style="margin-top:10px"></div>' +
+    '</div>') : '') +
+
+    (sec.planthealth ? (
+    '<div class="card">' +
+      '<span class="sec-label">🌱 Evaluating plant health</span>' +
+      '<div class="field"><label>Leaf colour</label><div class="chipgroup" id="leaf-chips"></div></div>' +
+      '<div class="field"><label>Suspected nutrient deficiency</label><div class="chipgroup" id="def-chips"></div></div>' +
+      '<textarea class="ta" id="fv-planthealth-note" placeholder="Root development, growth stage, anything else…">' + escapeHtml(draftVisit.plantHealth.note||'') + '</textarea>' +
+    '</div>') : '') +
+
+    (sec.soil ? (
+    '<div class="card">' +
+      '<div class="toggle-row" onclick="toggleSoil()"><div class="lbl">🧪 Soil sampling &amp; testing<small>pH, moisture, nutrient levels</small></div><div class="switch ' + (draftVisit.soilOn?'on':'') + '" id="soil-switch"></div></div>' +
+      '<div class="reveal ' + (draftVisit.soilOn?'open':'') + '" id="soil-reveal">' +
+        '<div class="grid2">' +
+          '<div class="field"><label>pH</label><input type="text" id="soil-ph" value="' + escapeHtml(draftVisit.soilTest?.ph||'') + '" placeholder="e.g. 6.2"></div>' +
+          '<div class="field"><label>Moisture</label><input type="text" id="soil-moisture" value="' + escapeHtml(draftVisit.soilTest?.moisture||'') + '" placeholder="e.g. Fair"></div>' +
+          '<div class="field"><label>Nitrogen (N)</label><input type="text" id="soil-n" value="' + escapeHtml(draftVisit.soilTest?.n||'') + '" placeholder="Low / Medium / High"></div>' +
+          '<div class="field"><label>Phosphorus (P)</label><input type="text" id="soil-p" value="' + escapeHtml(draftVisit.soilTest?.p||'') + '" placeholder="Low / Medium / High"></div>' +
+        '</div>' +
+        '<div class="field"><label>Potassium (K)</label><input type="text" id="soil-k" value="' + escapeHtml(draftVisit.soilTest?.k||'') + '" placeholder="Low / Medium / High"></div>' +
+        '<textarea class="ta" id="soil-note" placeholder="Fertility/treatment recommendation…">' + escapeHtml(draftVisit.soilTest?.note||'') + '</textarea>' +
+      '</div>' +
+    '</div>') : '') +
+
+    (sec.inputs ? (
+    '<div class="card">' +
+      '<span class="sec-label">💊 Recommending inputs</span>' +
+      INPUT_TYPES.map(t => renderInputRow(t)).join('') +
+    '</div>') : '') +
+
+    (sec.mgmt ? (
+    '<div class="card">' +
+      '<span class="sec-label">🗣 Management strategy discussion</span>' +
+      '<div class="chipgroup" id="mgmt-chips"></div>' +
+      '<textarea class="ta" id="fv-mgmt-note" placeholder="Cultivation technique, rotation plan, harvest timing discussed…">' + escapeHtml(draftVisit.mgmtNote||'') + '</textarea>' +
+    '</div>') : '') +
+
+    (sec.conservation ? (
+    '<div class="card">' +
+      '<div class="toggle-row" onclick="toggleConservation()"><div class="lbl">🌍 Environmental conservation<small>Water, soil erosion, natural resources</small></div><div class="switch ' + (draftVisit.conservationOn?'on':'') + '" id="cons-switch"></div></div>' +
+      '<div class="reveal ' + (draftVisit.conservationOn?'open':'') + '" id="cons-reveal">' +
+        '<textarea class="ta" id="fv-conservation" placeholder="Conservation action recommended…">' + escapeHtml(draftVisit.conservation||'') + '</textarea>' +
+      '</div>' +
+    '</div>') : '') +
+
+    '<div class="card">' +
+      '<span class="sec-label">📅 Next visit</span>' +
+      '<div class="chipgroup" id="days-chips"></div>' +
+      '<div class="field"><label>Purpose of next visit</label><select id="fv-nextphase">' + PHASES.map(p => '<option ' + (draftVisit.nextPhase===p?'selected':'') + '>' + p + '</option>').join('') + '</select></div>' +
+    '</div>' +
+
+    '<button class="btn" onclick="saveVisit()">✓ Save visit</button>';
+
+  renderChipGroup('phase-chips', PHASES, draftVisit.phase, false, v => { draftVisit.phase = v; renderLogForm(); });
+  if (sec.scouting) renderChipGroup('severity-chips', SEVERITIES.map(s=>s.k), draftVisit.severity, false, v => { draftVisit.severity = v; renderLogForm(); }, SEVERITIES);
+  if (sec.planthealth){
+    renderChipGroup('leaf-chips', LEAF_COLORS, draftVisit.plantHealth.leaf, false, v => { draftVisit.plantHealth.leaf = v; syncFormText(); renderLogForm(); });
+    renderChipGroup('def-chips', DEFICIENCIES, draftVisit.plantHealth.deficiency, false, v => { draftVisit.plantHealth.deficiency = v; syncFormText(); renderLogForm(); });
+  }
+  if (sec.mgmt) renderChipGroup('mgmt-chips', MGMT_TOPICS, draftVisit.mgmt, true, v => {
+    const i = draftVisit.mgmt.indexOf(v);
+    if (i === -1) draftVisit.mgmt.push(v); else draftVisit.mgmt.splice(i,1);
+    syncFormText(); renderLogForm();
+  });
+  renderChipGroup('days-chips', [7,14,21,30], draftVisit.nextVisitDays, false, v => { draftVisit.nextVisitDays = v; renderLogForm(); }, null, 'day');
+
+  // re-focus friendly: wire plain inputs to sync on change without full re-render
+  ['fv-scouting','fv-planthealth-note','soil-ph','soil-moisture','soil-n','soil-p','soil-k','soil-note','fv-mgmt-note','fv-conservation'].forEach(id => {
+    const elx = document.getElementById(id);
+    if (elx) elx.addEventListener('input', syncFormText, {once:false});
+  });
+  const nextPhaseSel = document.getElementById('fv-nextphase');
+  if (nextPhaseSel) nextPhaseSel.addEventListener('change', () => { draftVisit.nextPhase = nextPhaseSel.value; });
+}
+
+function renderInputRow(t){
+  const on = !!draftVisit.inputsOn[t.k];
+  const note = draftVisit.inputNotes[t.k] || '';
+  return '<div class="inputrow">' +
+    '<div class="hd" onclick="toggleInput(\'' + t.k + '\')"><span class="lbl">' + t.label + '</span><input type="checkbox" ' + (on?'checked':'') + ' onclick="event.stopPropagation();toggleInput(\'' + t.k + '\')"></div>' +
+    '<div class="reveal ' + (on?'open':'') + '" id="input-reveal-' + t.k + '"><input type="text" id="input-note-' + t.k + '" value="' + escapeHtml(note) + '" placeholder="' + t.ph + '" style="margin-top:8px;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px"></div>' +
+  '</div>';
+}
+function toggleInput(k){
+  draftVisit.inputsOn[k] = !draftVisit.inputsOn[k];
+  renderLogForm();
+}
+function toggleSoil(){ draftVisit.soilOn = !draftVisit.soilOn; renderLogForm(); }
+function toggleConservation(){ draftVisit.conservationOn = !draftVisit.conservationOn; renderLogForm(); }
+
+function syncFormText(){
+  const g = id => { const e = document.getElementById(id); return e ? e.value : ''; };
+  const sec = phaseSections(draftVisit.phase);
+  draftVisit.scouting = g('fv-scouting');
+  draftVisit.plantHealth.note = g('fv-planthealth-note');
+  draftVisit.mgmtNote = g('fv-mgmt-note');
+  draftVisit.conservation = g('fv-conservation');
+  draftVisit.soilTest = (sec.soil && draftVisit.soilOn) ? {ph:g('soil-ph'), moisture:g('soil-moisture'), n:g('soil-n'), p:g('soil-p'), k:g('soil-k'), note:g('soil-note')} : null;
+  INPUT_TYPES.forEach(t => { const e = document.getElementById('input-note-'+t.k); if (e) draftVisit.inputNotes[t.k] = e.value; });
+}
+
+function renderChipGroup(elId, options, selected, multi, onSelect, colored, suffix){
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const isActive = v => multi ? selected.includes(v) : selected === v;
+  el.innerHTML = options.map(v => {
+    let cls = 'selectchip';
+    if (colored){ const found = colored.find(c=>c.k===v); if (found && found.cls) cls += ' ' + found.cls; }
+    if (isActive(v)) cls += ' active';
+    const display = suffix === 'day' ? ('+' + v + 'd') : v;
+    return '<button class="' + cls + '" onclick="chipPick(\'' + elId + '\',\'' + String(v).replace(/'/g,"\\'") + '\')">' + display + '</button>';
+  }).join('');
+  el.dataset.onselect = '';
+  el._onSelect = onSelect;
+}
+function chipPick(elId, value){
+  const el = document.getElementById(elId);
+  if (el && el._onSelect) el._onSelect(isNaN(Number(value)) ? value : Number(value));
+}
+
+/* ---------- save ---------- */
+function saveVisit(){
+  syncFormText();
+  const isIndividual = draftVisit.type === 'individual';
+  const farmer = isIndividual ? FARMERS.find(f => f.id === draftVisit.farmerId) : null;
+  if (isIndividual && !farmer) return;
+
+  const sec = phaseSections(draftVisit.phase);
+  const inputs = sec.inputs ? INPUT_TYPES.filter(t => draftVisit.inputsOn[t.k]).map(t => ({type:t.k, note: draftVisit.inputNotes[t.k] || ''})) : [];
+
+  const record = {
+    id: 'VL-' + (3000 + (visitSeq++)),
+    type: draftVisit.type,
+    farmerId: isIndividual ? farmer.id : null,
+    farmerName: isIndividual ? farmer.name : ('Extension session — ' + (draftVisit.groupAttendees||'—') + ' attendees' + (draftVisit.groupTopic ? ' · ' + draftVisit.groupTopic : '')),
+    location: isIndividual ? farmer.location : draftVisit.groupLocation,
+    date: new Date(),
+    phase: draftVisit.phase,
+    sections: sec,
+    scouting: sec.scouting ? (draftVisit.scouting || '') : '',
+    severity: sec.scouting ? draftVisit.severity : 'None',
+    plantHealth: sec.planthealth ? {...draftVisit.plantHealth} : null,
+    soilTest: draftVisit.soilTest,
+    inputs,
+    mgmt: sec.mgmt ? draftVisit.mgmt.slice() : [],
+    mgmtNote: sec.mgmt ? (draftVisit.mgmtNote || '') : '',
+    conservation: (sec.conservation && draftVisit.conservationOn) ? (draftVisit.conservation || '') : '',
+    nextVisitDays: draftVisit.nextVisitDays,
+    nextPhase: draftVisit.nextPhase || PHASES[0],
+  };
+  VISITS.unshift(record);
+
+  if (isIndividual){
+    farmer.lastVisitDate = today;
+    farmer.lastPhase = draftVisit.phase;
+    farmer.nextVisitDate = addDays(today, draftVisit.nextVisitDays);
+    farmer.nextPhase = record.nextPhase;
+  }
+
+  document.getElementById('logdone-body').innerHTML =
+    '<div style="text-align:center;padding:0 10px">' +
+      '<div style="font-size:40px;margin-bottom:10px">✓</div>' +
+      '<h3 style="font-family:var(--serif);font-size:19px;margin:0 0 6px">Visit logged</h3>' +
+      '<p style="color:var(--ink-2);font-size:13.5px;margin:0 0 18px">' + record.farmerName + ' · ' + record.location + '</p>' +
+      '<div class="card" style="text-align:left"><span class="chip blue">Next: ' + record.nextPhase + '</span><p style="margin:8px 0 0;font-size:13px;color:var(--ink-2)">Scheduled for ' + fmtDate(addDays(today, record.nextVisitDays)) + ' (+' + record.nextVisitDays + 'd)</p></div>' +
+      '<button class="btn" style="margin-top:8px" onclick="showScreen(\'home\')">Back to home</button>' +
+    '</div>';
+  showScreen('logdone');
+  pushToast('✓ Visit saved — next visit ' + fmtDate(addDays(today, record.nextVisitDays)));
+}
+
+/* ---------- history ---------- */
+let historyFilter = 'all';
+function setHistoryFilter(f){ historyFilter = f; renderHistory(); }
+function renderHistory(){
+  const bar = document.getElementById('history-filterbar');
+  if (bar) bar.innerHTML = ['all','individual','group'].map(f =>
+    '<button class="' + (historyFilter===f?'active':'') + '" onclick="setHistoryFilter(\'' + f + '\')">' + (f==='all'?'All':f==='individual'?'Individual':'Group') + '</button>'
+  ).join('');
+  const el = document.getElementById('history-list');
+  if (!el) return;
+  const list = VISITS.filter(v => historyFilter==='all' || v.type===historyFilter).sort((a,b)=>b.date-a.date);
+  if (!list.length){ el.innerHTML = '<p class="empty">No visits logged yet.</p>'; return; }
+  el.innerHTML = list.map(v =>
+    '<div class="tkcard" onclick="openVisitDetail(\'' + v.id + '\')"><div class="row1"><strong style="font-size:13px">' + v.farmerName + '</strong><span class="chip grey">' + fmtDate(v.date) + '</span></div>' +
+    '<p class="qtext">' + escapeHtml(visitSummary(v)) + '</p>' +
+    '<div class="meta">' + v.phase + ' · ' + v.location + (v.soilTest ? ' · 🧪 soil test' : '') + '</div></div>'
+  ).join('');
+}
+
+function openVisitDetail(id){
+  currentVisitId = id;
+  showScreen('visitdetail');
+  renderVisitDetail();
+}
+let currentVisitId = null;
+function renderVisitDetail(){
+  const v = VISITS.find(x => x.id === currentVisitId);
+  const el = document.getElementById('visitdetail-body');
+  if (!v){ el.innerHTML = '<p class="empty">Not found.</p>'; return; }
+  const sec = v.sections || phaseSections(v.phase);
+  el.innerHTML =
+    '<div class="card"><h3>' + v.farmerName + '</h3><p style="margin:0;font-size:12.5px;color:var(--ink-3)">' + v.location + ' · ' + fmtDate(v.date) + ' · ' + v.phase + '</p></div>' +
+    (sec.scouting ? '<div class="card"><span class="sec-label">Scouting</span><p style="margin:0;font-size:13.5px">' + escapeHtml(v.scouting||'—') + '</p><span class="chip ' + (v.severity==='None'||v.severity==='Low'?'green':v.severity==='Moderate'?'amber':'clay') + '" style="margin-top:8px">' + v.severity + ' severity</span></div>' : '') +
+    (sec.planthealth && v.plantHealth ? '<div class="card"><span class="sec-label">Plant health</span><p style="margin:0 0 6px;font-size:13.5px">Leaf: ' + v.plantHealth.leaf + ' · Deficiency: ' + v.plantHealth.deficiency + '</p>' + (v.plantHealth.note ? '<p style="margin:0;font-size:13px;color:var(--ink-2)">' + escapeHtml(v.plantHealth.note) + '</p>' : '') + '</div>' : '') +
+    (v.soilTest ? '<div class="card"><span class="sec-label">Soil test</span><div class="statrow"><div class="stat"><div class="k">pH</div><div class="v">' + v.soilTest.ph + '</div></div><div class="stat"><div class="k">Moisture</div><div class="v">' + v.soilTest.moisture + '</div></div><div class="stat"><div class="k">N-P-K</div><div class="v" style="font-size:13px">' + v.soilTest.n + ' / ' + v.soilTest.p + ' / ' + v.soilTest.k + '</div></div></div>' + (v.soilTest.note ? '<p style="margin:8px 0 0;font-size:13px;color:var(--ink-2)">' + escapeHtml(v.soilTest.note) + '</p>' : '') + '</div>' : '')  +
+    (v.inputs && v.inputs.length ? '<div class="card"><span class="sec-label">Inputs recommended</span>' + v.inputs.map(i => '<p style="margin:0 0 6px;font-size:13.5px">' + (INPUT_TYPES.find(t=>t.k===i.type)||{label:i.type}).label + ' — ' + escapeHtml(i.note) + '</p>').join('') + '</div>' : '') +
+    ((v.mgmt&&v.mgmt.length)||v.mgmtNote ? '<div class="card"><span class="sec-label">Management discussion</span>' + (v.mgmt&&v.mgmt.length ? v.mgmt.map(m=>'<span class="chip blue" style="margin:0 6px 6px 0">'+m+'</span>').join('') : '') + (v.mgmtNote ? '<p style="margin:8px 0 0;font-size:13.5px">' + escapeHtml(v.mgmtNote) + '</p>' : '') + '</div>' : '') +
+    (v.conservation ? '<div class="card"><span class="sec-label">Environmental conservation</span><p style="margin:0;font-size:13.5px">' + escapeHtml(v.conservation) + '</p></div>' : '') +
+    '<div class="card"><span class="sec-label">Next visit</span><span class="chip blue">' + v.nextPhase + '</span> <span class="chip grey">+' + v.nextVisitDays + 'd</span></div>';
+}
+
+function visitSummary(v){
+  return v.scouting || v.mgmtNote || (v.soilTest && v.soilTest.note) || ('Visit logged — ' + v.phase);
+}
+
+/* ---------- trials ---------- */
+function renderTrials(){
+  const el = document.getElementById('trials-list');
+  el.innerHTML = TRIALS.map(t => {
+    const logHtml = t.log.slice().sort((a,b)=>b.dateOffset-a.dateOffset).map(l =>
+      '<p style="margin:0 0 6px;font-size:13px"><span style="color:var(--ink-3);font-family:var(--mono);font-size:11px">' + fmtDate(addDays(today,l.dateOffset)) + '</span> — ' + escapeHtml(l.note) + '</p>'
+    ).join('');
+    return '<details class="faq" open><summary>' + t.title + '<span class="arrow">›</span></summary>' +
+      '<p style="margin:6px 0 10px;color:var(--ink-3);font-size:12px">' + t.location + ' · started ' + fmtDate(addDays(today,t.startOffset)) + ' · <span class="chip green" style="margin-left:2px">' + t.status + '</span></p>' +
+      logHtml +
+      '<div style="display:flex;gap:8px;margin-top:8px"><input type="text" id="trial-input-' + t.id + '" placeholder="Add an observation…" style="flex:1;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12.5px">' +
+      '<button class="btn sm" onclick="addTrialNote(\'' + t.id + '\')">Add</button></div>' +
+    '</details>';
+  }).join('');
+}
+function addTrialNote(id){
+  const input = document.getElementById('trial-input-' + id);
+  const text = input.value.trim();
+  if (!text) return;
+  const trial = TRIALS.find(t => t.id === id);
+  trial.log.push({dateOffset:0, note:text});
+  renderTrials();
+  pushToast('✓ Observation added to ' + trial.title);
+}
+
+/* ---------- global render ---------- */
+function renderAll(){
+  renderHomeStats();
+  renderHomeSchedule();
+  renderFarmersList();
+  if (document.querySelector('#agro [data-screen="farmerdetail"]').classList.contains('active')) renderFarmerDetail();
+  renderHistory();
+  renderTrials();
+}
+
+renderAll();
+</script>
+</body>
+</html>
